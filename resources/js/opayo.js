@@ -1,4 +1,4 @@
-window.opayo = ({ processing, identifier, merchantKey, name }) => {
+window.opayo = ({ processing, identifier, merchantKey, name, $wire }) => {
   return {
     // We use AlpineJs modelling here as we do not want the card details to go up to Livewire.
     name: name,
