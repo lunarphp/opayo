@@ -45,7 +45,7 @@ class OpayoServiceProvider extends ServiceProvider
 
             $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
 
-            $jsUrl = asset('/vendor/opayo'.$manifest['/opayo.js']);
+            $jsUrl = asset('/vendor/getcandy'.$manifest['/opayo.js']);
 
             return  <<<EOT
                 <script src="{$jsUrl}"></script>
@@ -62,6 +62,10 @@ class OpayoServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/getcandy'),
         ], 'getcandy.opayo.components');
+
+        $this->publishes([
+            __DIR__.'/../dist' => public_path('vendor/getcandy'),
+        ], 'getcandy.opayo.public');
 
         // Register the stripe payment component.
         Livewire::component('opayo.payment', PaymentForm::class);
