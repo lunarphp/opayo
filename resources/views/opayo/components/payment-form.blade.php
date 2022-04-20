@@ -144,4 +144,12 @@
         <span x-text="error.message" class="block text-red-600"></span>
       </template>
     </div>
+
+    @if($error)
+      <div class="p-4 mt-4 space-y-2 rounded bg-red-50">
+        <span class="block text-red-600">
+          {{ $error }}
+        </span>
+      </div>
+    @endif
 </div>
