@@ -2,6 +2,7 @@
 
 namespace GetCandy\Opayo\Components;
 
+use GetCandy\Facades\CartSession;
 use GetCandy\Facades\Payments;
 use GetCandy\Models\Cart;
 use GetCandy\Opayo\Facades\Opayo;
@@ -127,6 +128,13 @@ class PaymentForm extends Component
         $this->merchantKey = Opayo::getMerchantKey();
     }
 
+    public function updatedShowChallenge($value)
+    {
+        if (!$value) {
+            $this->resetState();
+        }
+    }
+
     /**
      * Process the transaction
      *
@@ -142,7 +150,7 @@ class PaymentForm extends Component
         ], $this->browser))->authorize();
 
         if ($result->success) {
-            if ($result->status == '3DAuth') {
+            if ($result->status == Opayo::THREE_D_AUTH) {
                 $this->threeDSecure['acsUrl'] = $result->acsUrl;
                 $this->threeDSecure['acsTransId'] = $result->acsTransId;
                 $this->threeDSecure['dsTransId'] = $result->dsTransId;
@@ -153,7 +161,9 @@ class PaymentForm extends Component
             }
         }
 
-        dd($result);
+        if ($result->status == Opayo::ALREADY_PLACED) {
+            CartSession::forget();
+        }
         // dd($result);
     }
 
@@ -172,30 +182,47 @@ class PaymentForm extends Component
         ])->threedsecure();
 
         if (!$result->success) {
-            if ($result->status = 'threed_secure_fail') {
+            if ($result->status == Opayo::THREED_SECURE_FAILED) {
                 $this->error = 'You must complete the extra authentication';
-                $this->processing = false;
-                $this->showChallenge = false;
-                $this->threedSecure = [
-                    'acsUrl' => null,
-                    'acsTransId' => null,
-                    'dsTransId' => null,
-                    'cReq' => null,
-                    'transactionId' => null,
-                ];
-                $this->refreshMerchantKey();
+                $this->resetState();
+                return;
+            }
+
+            if ($result->status == Opayo::AUTH_FAILED) {
+                $this->error = 'Payment failed, please check details and try again';
+                $this->resetState();
                 return;
             }
         }
+
+        if ($result->status == Opayo::AUTH_SUCCESSFUL) {
+            $this->emit('opayoAuthorizationSuccessful');
+            return;
+        }
+
 
         dd($result);
 
         // \GetCandy\Facades\CartSession::forget();
     }
 
-    public function opayoThreedSecureResponse()
+    /**
+     * Reset the ThreeDSecure state.
+     *
+     * @return void
+     */
+    protected function resetState()
     {
-        dd('Hi!');
+        $this->processing = false;
+        $this->showChallenge = false;
+        $this->threedSecure = [
+            'acsUrl' => null,
+            'acsTransId' => null,
+            'dsTransId' => null,
+            'cReq' => null,
+            'transactionId' => null,
+        ];
+        $this->refreshMerchantKey();
     }
 
     /**

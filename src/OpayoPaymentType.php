@@ -8,10 +8,7 @@ use GetCandy\Models\Transaction;
 use GetCandy\Opayo\Facades\Opayo;
 use GetCandy\Opayo\Responses\PaymentAuthorize;
 use GetCandy\PaymentTypes\AbstractPayment;
-use GetCandy\Stripe\Facades\StripeFacade;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Stripe\Exception\InvalidRequestException;
 
 class OpayoPaymentType extends AbstractPayment
 {
@@ -48,6 +45,7 @@ class OpayoPaymentType extends AbstractPayment
             return new PaymentAuthorize(
                 success: false,
                 message: 'This order has already been placed',
+                status: Opayo::ALREADY_PLACED,
             );
         }
 
@@ -63,7 +61,7 @@ class OpayoPaymentType extends AbstractPayment
         $response = Opayo::api()->post('transactions', $payload);
 
         if (!$response->successful()) {
-            dd($response);
+            dd('Line 67');
         }
 
         $response = $response->object();
@@ -71,7 +69,7 @@ class OpayoPaymentType extends AbstractPayment
         if ($response->status == '3DAuth') {
             return new PaymentAuthorize(
                 success: true,
-                status: $response->status,
+                status: Opayo::THREE_D_AUTH,
                 acsUrl: $response->acsUrl,
                 acsTransId: $response->acsTransId,
                 dsTransId: $response->dsTransId,
@@ -80,19 +78,9 @@ class OpayoPaymentType extends AbstractPayment
             );
         }
 
-        dd('Hi!');
+        dd('Line 84');
 
         return $this->releaseSuccess();
-    }
-
-    /**
-     * Return a unique vendor tx code for the transaction.
-     *
-     * @return string
-     */
-    protected function getVendorTxCode()
-    {
-        return base64_encode($this->order->id.'-'.microtime(true));
     }
 
     /**
@@ -104,47 +92,7 @@ class OpayoPaymentType extends AbstractPayment
      */
     public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
-        $payload = [];
-
-        if ($amount > 0) {
-            $payload['amount_to_capture'] = $amount;
-        }
-
-        try {
-            $response = $this->stripe->paymentIntents->capture(
-                $transaction->reference,
-                $payload
-            );
-        } catch (InvalidRequestException $e) {
-            return new PaymentCapture(
-                success: false,
-                message: $e->getMessage()
-            );
-        }
-
-        $charges = $response->charges->data;
-
-        $transactions = [];
-
-        foreach ($charges as $charge) {
-            $card = $charge->payment_method_details->card;
-            $transactions[] = [
-                'parent_transaction_id' => $transaction->id,
-                'success' => $charge->status != 'failed',
-                'type' => 'capture',
-                'driver' => 'stripe',
-                'amount' => $charge->amount_captured,
-                'reference' => $response->id,
-                'status' => $charge->status,
-                'notes' => $charge->failure_message,
-                'card_type' => $card->brand,
-                'last_four' => $card->last4,
-                'captured_at' => $charge->amount_captured ? now() : null,
-            ];
-        }
-
-        $transaction->order->transactions()->createMany($transactions);
-
+        // ...
         return new PaymentCapture(success: true);
     }
 
@@ -158,87 +106,9 @@ class OpayoPaymentType extends AbstractPayment
      */
     public function refund(Transaction $transaction, int $amount = 0, $notes = null): PaymentRefund
     {
-        try {
-            $refund = $this->stripe->refunds->create(
-                ['payment_intent' => $transaction->reference, 'amount' => $amount]
-            );
-        } catch (InvalidRequestException $e) {
-            return new PaymentRefund(
-                success: false,
-                message: $e->getMessage()
-            );
-        }
-
-        $transaction->order->transactions()->create([
-            'success' => $refund->status != 'failed',
-            'type' => 'refund',
-            'driver' => 'stripe',
-            'amount' => $refund->amount,
-            'reference' => $refund->payment_intent,
-            'status' => $refund->status,
-            'notes' => $notes,
-            'card_type' => $transaction->card_type,
-            'last_four' => $transaction->last_four,
-        ]);
-
         return new PaymentRefund(
             success: true
         );
-    }
-
-    /**
-     * Return a successfully released payment.
-     *
-     * @return void
-     */
-    private function releaseSuccess()
-    {
-        DB::transaction(function () {
-
-            // Get our first successful charge.
-            $charges = $this->paymentIntent->charges->data;
-
-            $successCharge = collect($charges)->first(function ($charge) {
-                return !$charge->refunded && ($charge->status == 'succeeded' || $charge->status == 'paid');
-            });
-
-            $this->order->update([
-                'status' => $this->config['released'] ?? 'paid',
-                'placed_at' => now()->parse($successCharge->created),
-            ]);
-
-            $transactions = [];
-
-            $type = 'capture';
-
-            if ($this->policy == 'manual') {
-                $type = 'intent';
-            }
-
-            foreach ($charges as $charge) {
-                $card = $charge->payment_method_details->card;
-                $transactions[] = [
-                    'success' => $charge->status != 'failed',
-                    'type' => $charge->amount_refunded ? 'refund' : $type,
-                    'driver' => 'stripe',
-                    'amount' => $charge->amount,
-                    'reference' => $this->paymentIntent->id,
-                    'status' => $charge->status,
-                    'notes' => $charge->failure_message,
-                    'card_type' => $card->brand,
-                    'last_four' => $card->last4,
-                    'captured_at' => $charge->amount_captured ? now() : null,
-                    'meta' => [
-                        'address_line1_check' => $card->checks->address_line1_check,
-                        'address_postal_code_check' => $card->checks->address_postal_code_check,
-                        'cvc_check' => $card->checks->cvc_check,
-                    ],
-                ];
-            }
-            $this->order->transactions()->createMany($transactions);
-        });
-
-        return new PaymentAuthorize(success: true);
     }
 
     /**
@@ -276,24 +146,46 @@ class OpayoPaymentType extends AbstractPayment
 
         $data = $response->object();
 
-        \Log::debug((array) $response);
-
         if ($data->statusCode == '4026') {
             return new PaymentAuthorize(
                 success: false,
-                status: 'threed_secure_fail'
+                status: Opayo::THREED_SECURE_FAILED
             );
         }
 
         $transaction = Opayo::getTransaction($this->data['transaction_id']);
 
-        if ($transaction->status != 'Ok') {
-            return $this->createFailedTransaction($transaction);
+        $successful = $transaction->status == 'Ok';
+
+        $this->storeTransaction(
+            transaction: $transaction,
+            success: $successful
+        );
+
+        if ($successful) {
+            $this->order->update([
+                'placed_at' => now(),
+            ]);
         }
 
-        $this->order->transactions()->create([
-            'success' => $transaction->status == 'Ok',
-            'type' => $transaction->transactionType == 'Payment' ? 'charge' : 'intent',
+        return new PaymentAuthorize(
+            success: $successful,
+            status: $successful ? Opayo::AUTH_SUCCESSFUL : Opayo::AUTH_FAILED
+        );
+    }
+
+    /**
+     * Stores a transaction against the order.
+     *
+     * @param stdclass $transaction
+     * @param boolean $success
+     * @return void
+     */
+    protected function storeTransaction($transaction, $success = false)
+    {
+        $data = [
+            'success' => $success,
+            'type' => $transaction->transactionType == 'Payment' ? 'capture' : 'intent',
             'driver' => 'opayo',
             'amount' => $transaction->amount->totalAmount,
             'reference' => $transaction->transactionId,
@@ -301,7 +193,7 @@ class OpayoPaymentType extends AbstractPayment
             'notes' => $transaction->statusDetail,
             'card_type' => $transaction->paymentMethod->card->cardType,
             'last_four' => $transaction->paymentMethod->card->lastFourDigits,
-            'captured_at' => $transaction->transactionType == 'Payment' ? now() : null,
+            'captured_at' => $success ? ($transaction->transactionType == 'Payment' ? now() : null) : null,
             'meta' => [
                 'threedSecure' => [
                     'status' => $transaction->avsCvcCheck->status,
@@ -310,13 +202,8 @@ class OpayoPaymentType extends AbstractPayment
                     'securityCode' => $transaction->avsCvcCheck->securityCode,
                 ],
             ],
-        ]);
-
-        $this->order->update([
-            'placed_at' => now(),
-        ]);
-
-        return new PaymentAuthorize(success: true);
+        ];
+        $this->order->transactions()->create($data);
     }
 
     /**

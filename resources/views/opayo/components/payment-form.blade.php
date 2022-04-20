@@ -1,9 +1,9 @@
 <div x-data="{
   {{-- We use AlpineJs modelling here as we do not want the card details to go up to Livewire. --}}
   name: '{{ $this->billing->first_name }} {{ $this->billing->last_name }}',
-  card: '4929000000006',
-  expiry: '1232',
-  cvv: '123',
+  card: null,
+  expiry: null,
+  cvv: null,
   processing: @entangle('processing'),
   {{-- This is the tokenised card we need to send up to Livewire --}}
   identifier: @entangle('identifier'),
@@ -53,13 +53,13 @@
       onTokenised: (result) => {
           if (!result.success) {
             this.errors = result.errors
-            this.processing = false
-            return
+            $wire.set('processing', false)
+            {{-- return --}}
+          } else {
+            $wire.set('identifier', result.cardIdentifier)
+            $wire.set('sessionKey', this.merchantKey)
+            $wire.call('process')
           }
-
-          $wire.set('identifier', result.cardIdentifier)
-          $wire.set('sessionKey', this.merchantKey)
-          $wire.call('process')
       },
       cardDetails: {
         cardholderName: this.name,

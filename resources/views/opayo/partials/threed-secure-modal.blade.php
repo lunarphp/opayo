@@ -23,7 +23,7 @@ switch ($maxWidth ?? '2xl') {
 
 <div
     x-data="{
-        show: true,
+        show: @entangle('showChallenge'),
         focusables() {
             // All focusable element types...
             let selector = 'a, button, input, textarea, select, details, [tabindex]:not([tabindex=\'-1\'])'
