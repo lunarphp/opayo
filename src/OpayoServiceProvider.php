@@ -6,6 +6,7 @@ use GetCandy\Facades\Payments;
 use GetCandy\Opayo\Components\PaymentForm;
 use GetCandy\Stripe\Managers\StripeManager;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 
@@ -34,11 +35,20 @@ class OpayoServiceProvider extends ServiceProvider
         Blade::directive('opayoScripts', function () {
             $url = 'https://pi-test.sagepay.com/api/v1/js/sagepay.js';
 
+            $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+
+            $jsUrl = asset('/vendor/opayo'.$manifest['/opayo.js']);
+
             if (config('services.opayo.env', 'test') == 'live') {
                 $url = 'https://pi-live.sagepay.com/api/v1/js/sagepay.js';
             }
 
+            $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
+
+            $jsUrl = asset('/vendor/opayo'.$manifest['/opayo.js']);
+
             return  <<<EOT
+                <script src="{$jsUrl}"></script>
                 <script src="{$url}"></script>
             EOT;
         });
