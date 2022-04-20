@@ -1,0 +1,11 @@
+{
+  "name": "opayo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://alecritson@github.com/getcandy/opayo.git",
+  "author": "Alec Ritson <hello@itsalec.co.uk>",
+  "license": "MIT",
+  "devDependencies": {
+    "laravel-mix": "^6.0.43"
+  }
+}
