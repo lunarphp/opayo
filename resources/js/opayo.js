@@ -1,3 +1,5 @@
+import Cleave from 'cleave.js';
+
 window.opayo = ({ processing, identifier, merchantKey, name, $wire }) => {
   return {
     // We use AlpineJs modelling here as we do not want the card details to go up to Livewire.
@@ -5,6 +7,7 @@ window.opayo = ({ processing, identifier, merchantKey, name, $wire }) => {
     card: null,
     expiry: null,
     cvv: null,
+    cardType: null,
     processing: processing,
     // This is the tokenised card we need to send up to Livewire
     identifier: identifier,
@@ -18,6 +21,18 @@ window.opayo = ({ processing, identifier, merchantKey, name, $wire }) => {
             pares: e.detail.PaRes,
             cres: e.detail.cres
           })
+      });
+
+      new Cleave(this.$refs['card'], {
+        creditCard: true,
+        onCreditCardTypeChanged: type => {
+            this.cardType = type;
+        }
+      });
+
+      new Cleave(this.$refs['expiry'], {
+        date: true,
+        datePattern: ['m', 'y']
       });
     },
     handleSubmit () {
@@ -64,8 +79,8 @@ window.opayo = ({ processing, identifier, merchantKey, name, $wire }) => {
         },
         cardDetails: {
           cardholderName: this.name,
-          cardNumber: this.card,
-          expiryDate: this.expiry,
+          cardNumber: this.card.toString().replace(/\s/g,''),
+          expiryDate: this.expiry.toString().replace('/', ''),
           securityCode: this.cvv,
         }
       })

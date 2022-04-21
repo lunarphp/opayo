@@ -16,5 +16,8 @@
   },
   "devDependencies": {
     "laravel-mix": "^6.0.43"
+  },
+  "dependencies": {
+    "cleave.js": "^1.6.0"
   }
 }

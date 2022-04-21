@@ -1,4 +1,5 @@
 <div x-data="opayo({
+  $wire,
   processing: @entangle('processing'),
   identifier: @entangle('identifier'),
   merchantKey: @entangle('merchantKey'),
@@ -16,7 +17,7 @@
       <div class="flex space-x-2">
         <label class="space-y-1 grow">
           <span class="text-sm font-medium">Card Number</span>
-          <input type="number" x-model="card" class="w-full border-gray-300 rounded shadow-sm" placeholder="0000 0000 0000 0000" />
+          <input type="text" x-model="card" x-ref="card" class="w-full border-gray-300 rounded shadow-sm" placeholder="0000 0000 0000 0000" />
         </label>
 
         <label class="w-24 space-y-1">
@@ -26,7 +27,7 @@
 
         <label class="w-24 space-y-1">
           <span class="text-sm font-medium">Expiry</span>
-          <input type="text" x-model="expiry" class="w-full border-gray-300 rounded shadow-sm" placeholder="MM/YY" />
+          <input type="text" x-model="expiry" x-ref="expiry" class="w-full border-gray-300 rounded shadow-sm" placeholder="MM/YY" />
         </label>
       </div>
 

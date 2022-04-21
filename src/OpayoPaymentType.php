@@ -55,13 +55,15 @@ class OpayoPaymentType extends AbstractPayment
             $transactionType = 'Deferred';
         }
 
-
         $payload = $this->getAuthPayload($transactionType);
 
         $response = Opayo::api()->post('transactions', $payload);
 
         if (!$response->successful()) {
-            dd('Line 67');
+            return new PaymentAuthorize(
+                success: false,
+                message: 'An unknown error occured'
+            );
         }
 
         $response = $response->object();
@@ -78,9 +80,23 @@ class OpayoPaymentType extends AbstractPayment
             );
         }
 
-        dd('Line 84');
+        $successful = $response->status == 'Ok';
 
-        return $this->releaseSuccess();
+        $this->storeTransaction(
+            transaction: $response,
+            success: $successful
+        );
+
+        if ($successful) {
+            $this->order->update([
+                'placed_at' => now(),
+            ]);
+        }
+
+        return new PaymentAuthorize(
+            success: $successful,
+            status: $successful ? Opayo::AUTH_SUCCESSFUL : Opayo::AUTH_FAILED
+        );
     }
 
     /**
@@ -92,7 +108,34 @@ class OpayoPaymentType extends AbstractPayment
      */
     public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
-        // ...
+        $response = Opayo::api()->post("transactions/{$transaction->reference}/instructions", [
+            'instructionType' => 'release',
+            'amount' => $amount,
+        ]);
+
+        $data = $response->object();
+
+        if (!$response->successful() || isset($data->code)) {
+            return new PaymentCapture(
+                success: false,
+                message: $data->description ?? 'An unknown error occured'
+            );
+        }
+
+        $transaction->order->transactions()->create([
+            'parent_transaction_id' => $transaction->id,
+            'success' => true,
+            'type' => 'capture',
+            'driver' => 'opayo',
+            'amount' => $amount,
+            'reference' => $transaction->reference,
+            'status' => $transaction->status,
+            'notes' => null,
+            'card_type' => $transaction->card_type,
+            'last_four' => $transaction->last_four,
+            'captured_at' => now()->parse($data->date),
+        ]);
+
         return new PaymentCapture(success: true);
     }
 
@@ -106,6 +149,37 @@ class OpayoPaymentType extends AbstractPayment
      */
     public function refund(Transaction $transaction, int $amount = 0, $notes = null): PaymentRefund
     {
+        $response = Opayo::api()->post("transactions", [
+            'transactionType' => 'Refund',
+            'vendorTxCode' => Str::random(40),
+            'referenceTransactionId' => $transaction->reference,
+            'description' => $notes ?: 'Refund',
+            'amount' => $amount,
+        ]);
+
+        $data = $response->object();
+
+        if (!$response->successful() || isset($data->code)) {
+            return new PaymentRefund(
+                success: false,
+                message: $data->description ?? 'An unknown error occured'
+            );
+        }
+
+        $transaction->order->transactions()->create([
+            'parent_transaction_id' => $transaction->id,
+            'success' => true,
+            'type' => 'refund',
+            'driver' => 'opayo',
+            'amount' => $amount,
+            'reference' => $data->transactionId,
+            'status' => $transaction->status,
+            'notes' => $notes,
+            'card_type' => $transaction->card_type,
+            'last_four' => $transaction->last_four,
+            'captured_at' => now(),
+        ]);
+
         return new PaymentRefund(
             success: true
         );
@@ -226,7 +300,7 @@ class OpayoPaymentType extends AbstractPayment
             'amount' => $this->order->total->value,
             'currency' => $this->order->currency_code,
             'description' => 'Webstore Transaction',
-            'apply3DSecure' => 'Force',
+            'apply3DSecure' => 'UseMSPSetting',
             'customerFirstName' => $this->order->billingAddress->first_name,
             'customerLastName' => $this->order->billingAddress->last_name,
             'billingAddress' => [
