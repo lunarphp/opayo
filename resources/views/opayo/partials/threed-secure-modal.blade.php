@@ -68,6 +68,7 @@ switch ($maxWidth ?? '2xl') {
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
         <iframe class="w-full" style="height:500px;" src="{{ route('opayo.threed.iframe', [
           'acsUrl' => $threeDSecure['acsUrl'],
+          'paReq' => $threeDSecure['paReq'],
           'cReq' => $threeDSecure['cReq'],
         ]) }}"></iframe>
     </div>

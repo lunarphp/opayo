@@ -64,6 +64,7 @@ class PaymentForm extends Component
         'acsUrl' => null,
         'acsTransId' => null,
         'dsTransId' => null,
+        'paReq' => null,
         'cReq' => null,
         'transactionId' => null,
     ];
@@ -155,6 +156,7 @@ class PaymentForm extends Component
                 $this->threeDSecure['acsTransId'] = $result->acsTransId;
                 $this->threeDSecure['dsTransId'] = $result->dsTransId;
                 $this->threeDSecure['cReq'] = $result->cReq;
+                $this->threeDSecure['paReq'] = $result->paReq;
                 $this->threeDSecure['transactionId'] = $result->transactionId;
                 $this->showChallenge = true;
                 return;
@@ -164,6 +166,13 @@ class PaymentForm extends Component
         if ($result->status == Opayo::ALREADY_PLACED) {
             CartSession::forget();
         }
+
+        if ($result->status == Opayo::AUTH_SUCCESSFUL) {
+            $this->emit('opayoAuthorizationSuccessful');
+            return;
+        }
+
+        dd($result);
         // dd($result);
     }
 

@@ -13,6 +13,7 @@ class PaymentAuthorize extends GcPaymentAuthorize
         public ?string $acsTransId = null,
         public ?string $dsTransId = null,
         public ?string $cReq = null,
+        public ?string $paReq = null,
         public ?string $transactionId = null,
         public ?string $message = null
     ) {

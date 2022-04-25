@@ -73,9 +73,10 @@ class OpayoPaymentType extends AbstractPayment
                 success: true,
                 status: Opayo::THREE_D_AUTH,
                 acsUrl: $response->acsUrl,
-                acsTransId: $response->acsTransId,
-                dsTransId: $response->dsTransId,
-                cReq: $response->cReq,
+                acsTransId: $response->acsTransId ?? null,
+                dsTransId: $response->dsTransId ?? null,
+                cReq: $response->cReq ?? null,
+                paReq: $response->paReq ?? null,
                 transactionId: $response->transactionId,
             );
         }
@@ -220,7 +221,14 @@ class OpayoPaymentType extends AbstractPayment
 
         $data = $response->object();
 
-        if ($data->statusCode == '4026') {
+        if (($data->statusCode ?? null) == '4026') {
+            return new PaymentAuthorize(
+                success: false,
+                status: Opayo::THREED_SECURE_FAILED
+            );
+        }
+
+        if (!empty($data->status) && $data->status == 'NotAuthenticated') {
             return new PaymentAuthorize(
                 success: false,
                 status: Opayo::THREED_SECURE_FAILED
