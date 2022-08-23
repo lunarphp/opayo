@@ -14,6 +14,7 @@ window.opayo = ({ processing, identifier, merchantKey, name, $wire }) => {
     merchantKey: merchantKey,
     errors: [],
     init() {
+
       window.addEventListener('opayo_threed_secure_response', e => {
           $wire.call('processThreed', {
             mdx: e.detail.mdx,
@@ -52,12 +53,19 @@ window.opayo = ({ processing, identifier, merchantKey, name, $wire }) => {
           screenSize = 'Medium';
       }
 
+      let colorDepth = window.screen.colorDepth;
+      const supportedDepths = [1, 4, 8, 15, 16, 24, 32, 48];
+
+      if (!supportedDepths.includes(colorDepth)) {
+          colorDepth = 24;
+      }
+
       $wire.set('browser', {
         browserLanguage: navigator.language,
         challengeWindowSize: screenSize,
         browserUserAgent: navigator.userAgent,
         browserJavaEnabled: navigator.javaEnabled(),
-        browserColorDepth: window.screen.colorDepth,
+        browserColorDepth: colorDepth,
         browserScreenHeight: window.outerHeight,
         browserScreenWidth: window.outerWidth,
         browserTZ: tzOffset,
