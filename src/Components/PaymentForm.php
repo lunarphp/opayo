@@ -172,8 +172,10 @@ class PaymentForm extends Component
             return;
         }
 
-        dd($result);
-        // dd($result);
+        if ($result->status == Opayo::AUTH_FAILED) {
+            $this->emit('opayoAuthorizationFailed');
+            return;
+        }
     }
 
     /**
@@ -208,11 +210,6 @@ class PaymentForm extends Component
             $this->emit('opayoAuthorizationSuccessful');
             return;
         }
-
-
-        dd($result);
-
-        // \GetCandy\Facades\CartSession::forget();
     }
 
     /**
