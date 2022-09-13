@@ -6,7 +6,7 @@
   name: '{{ $this->billing->first_name }} {{ $this->billing->last_name }}'
 })">
   @if($showChallenge)
-    @include('getcandy::opayo.partials.threed-secure-modal')
+    @include('lunar::opayo.partials.threed-secure-modal')
   @endif
 
   <form class="space-y-2" x-on:submit.prevent="handleSubmit()">

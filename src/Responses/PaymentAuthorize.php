@@ -1,8 +1,8 @@
 <?php
 
-namespace GetCandy\Opayo\Responses;
+namespace Lunar\Opayo\Responses;
 
-use GetCandy\Base\DataTransferObjects\PaymentAuthorize as GcPaymentAuthorize;
+use Lunar\Base\DataTransferObjects\PaymentAuthorize as GcPaymentAuthorize;
 
 class PaymentAuthorize extends GcPaymentAuthorize
 {

@@ -1,13 +1,13 @@
 <?php
 
-namespace GetCandy\Opayo;
+namespace Lunar\Opayo;
 
-use GetCandy\Base\DataTransferObjects\PaymentCapture;
-use GetCandy\Base\DataTransferObjects\PaymentRefund;
-use GetCandy\Models\Transaction;
-use GetCandy\Opayo\Facades\Opayo;
-use GetCandy\Opayo\Responses\PaymentAuthorize;
-use GetCandy\PaymentTypes\AbstractPayment;
+use Lunar\Base\DataTransferObjects\PaymentCapture;
+use Lunar\Base\DataTransferObjects\PaymentRefund;
+use Lunar\Models\Transaction;
+use Lunar\Opayo\Facades\Opayo;
+use Lunar\Opayo\Responses\PaymentAuthorize;
+use Lunar\PaymentTypes\AbstractPayment;
 use Illuminate\Support\Str;
 
 class OpayoPaymentType extends AbstractPayment
@@ -24,13 +24,13 @@ class OpayoPaymentType extends AbstractPayment
      */
     public function __construct()
     {
-        $this->policy = config('getcandy.opayo.policy', 'automatic');
+        $this->policy = config('lunar.opayo.policy', 'automatic');
     }
 
     /**
      * Authorize the payment for processing.
      *
-     * @return \GetCandy\Base\DataTransferObjects\PaymentAuthorize
+     * @return \Lunar\Base\DataTransferObjects\PaymentAuthorize
      */
     public function authorize(): PaymentAuthorize
     {
@@ -103,9 +103,9 @@ class OpayoPaymentType extends AbstractPayment
     /**
      * Capture a payment for a transaction.
      *
-     * @param \GetCandy\Models\Transaction $transaction
+     * @param \Lunar\Models\Transaction $transaction
      * @param integer $amount
-     * @return \GetCandy\Base\DataTransferObjects\PaymentCapture
+     * @return \Lunar\Base\DataTransferObjects\PaymentCapture
      */
     public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
@@ -143,10 +143,10 @@ class OpayoPaymentType extends AbstractPayment
     /**
      * Refund a captured transaction
      *
-     * @param \GetCandy\Models\Transaction $transaction
+     * @param \Lunar\Models\Transaction $transaction
      * @param integer $amount
      * @param string|null $notes
-     * @return \GetCandy\Base\DataTransferObjects\PaymentRefund
+     * @return \Lunar\Base\DataTransferObjects\PaymentRefund
      */
     public function refund(Transaction $transaction, int $amount = 0, $notes = null): PaymentRefund
     {
