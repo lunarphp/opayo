@@ -1,10 +1,10 @@
 <?php
 
-namespace GetCandy\Opayo;
+namespace Lunar\Opayo;
 
-use GetCandy\Facades\Payments;
-use GetCandy\Opayo\Components\PaymentForm;
-use GetCandy\Stripe\Managers\StripeManager;
+use Lunar\Facades\Payments;
+use Lunar\Opayo\Components\PaymentForm;
+use Lunar\Stripe\Managers\StripeManager;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\ServiceProvider;
@@ -28,7 +28,7 @@ class OpayoServiceProvider extends ServiceProvider
             return $app->make(Opayo::class);
         });
 
-        $this->mergeConfigFrom(__DIR__."/../config/opayo.php", "getcandy.opayo");
+        $this->mergeConfigFrom(__DIR__."/../config/opayo.php", "lunar.opayo");
 
         $this->loadRoutesFrom(__DIR__."/../routes/web.php");
 
@@ -45,7 +45,7 @@ class OpayoServiceProvider extends ServiceProvider
 
             $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
 
-            $jsUrl = asset('/vendor/getcandy'.$manifest['/opayo.js']);
+            $jsUrl = asset('/vendor/lunar'.$manifest['/opayo.js']);
 
             return  <<<EOT
                 <script src="{$jsUrl}"></script>
@@ -53,19 +53,19 @@ class OpayoServiceProvider extends ServiceProvider
             EOT;
         });
 
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'getcandy');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'lunar');
 
         $this->publishes([
-            __DIR__."/../config/opayo.php" => config_path("getcandy/opayo.php"),
-        ], 'getcandy.opayo.config');
+            __DIR__."/../config/opayo.php" => config_path("lunar/opayo.php"),
+        ], 'lunar.opayo.config');
 
         $this->publishes([
-            __DIR__.'/../resources/views' => resource_path('views/vendor/getcandy'),
-        ], 'getcandy.opayo.components');
+            __DIR__.'/../resources/views' => resource_path('views/vendor/lunar'),
+        ], 'lunar.opayo.components');
 
         $this->publishes([
-            __DIR__.'/../dist' => public_path('vendor/getcandy'),
-        ], 'getcandy.opayo.public');
+            __DIR__.'/../dist' => public_path('vendor/lunar'),
+        ], 'lunar.opayo.public');
 
         // Register the stripe payment component.
         Livewire::component('opayo.payment', PaymentForm::class);

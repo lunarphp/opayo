@@ -1,12 +1,12 @@
 <?php
 
-namespace GetCandy\Opayo\Components;
+namespace Lunar\Opayo\Components;
 
-use GetCandy\Facades\CartSession;
-use GetCandy\Facades\Payments;
-use GetCandy\Models\Cart;
-use GetCandy\Opayo\Facades\Opayo;
-use GetCandy\Stripe\Facades\StripeFacade;
+use Lunar\Facades\CartSession;
+use Lunar\Facades\Payments;
+use Lunar\Models\Cart;
+use Lunar\Opayo\Facades\Opayo;
+use Lunar\Stripe\Facades\StripeFacade;
 use Livewire\Component;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
@@ -246,6 +246,6 @@ class PaymentForm extends Component
      */
     public function render()
     {
-        return view("getcandy::opayo.components.payment-form");
+        return view("lunar::opayo.components.payment-form");
     }
 }

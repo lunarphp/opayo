@@ -2,8 +2,8 @@
   "name": "opayo",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "https://alecritson@github.com/getcandy/opayo.git",
-  "author": "Alec Ritson <hello@itsalec.co.uk>",
+  "repository": "https://lunarphp@github.com/lunarphp/opayo.git",
+  "author": "LunarPHP <hello@lunarphp.io>",
   "license": "MIT",
   "scripts": {
     "dev": "npm run development",

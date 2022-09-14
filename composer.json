@@ -1,18 +1,18 @@
 {
-  "name": "getcandy/opayo",
+  "name": "lunarphp/opayo",
   "type": "project",
-  "description": "Opayo payment driver for GetCandy.",
-  "keywords": ["getcandy", "laravel", "ecommerce", "e-commerce", "headless", "store", "shop", "cart", "opayo"],
+  "description": "Opayo payment driver for Lunar.",
+  "keywords": ["lunarphp", "laravel", "ecommerce", "e-commerce", "headless", "store", "shop", "cart", "opayo"],
   "license": "MIT",
   "authors": [
     {
-      "name": "GetCandy",
-      "homepage": "https://getcandy.io/"
+      "name": "Lunar",
+      "homepage": "https://lunarphp.io/"
     }
   ],
   "require": {
       "php": "^8.0",
-      "getcandy/core": "*",
+      "lunarphp/core": "*",
       "livewire/livewire": "^2.0"
   },
   "require-dev": {
@@ -22,7 +22,7 @@
   },
   "autoload": {
       "psr-4": {
-          "GetCandy\\Opayo\\": "src/"
+          "Lunar\\Opayo\\": "src/"
       }
   },
   "autoload-dev": {
@@ -31,12 +31,12 @@
       }
   },
   "extra": {
-    "getcandy": {
+    "lunar": {
         "name": "Opayo Payments"
     },
     "laravel": {
         "providers": [
-            "GetCandy\\Opayo\\OpayoServiceProvider"
+            "Lunar\\Opayo\\OpayoServiceProvider"
         ]
     }
   },

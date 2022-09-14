@@ -1,6 +1,6 @@
 <?php
 
-namespace GetCandy\Opayo;
+namespace Lunar\Opayo;
 
 interface OpayoInterface
 {

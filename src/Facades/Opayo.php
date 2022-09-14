@@ -1,8 +1,8 @@
 <?php
 
-namespace GetCandy\Opayo\Facades;
+namespace Lunar\Opayo\Facades;
 
-use GetCandy\Opayo\OpayoInterface;
+use Lunar\Opayo\OpayoInterface;
 use Illuminate\Support\Facades\Facade;
 
 class Opayo extends Facade

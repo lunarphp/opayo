@@ -1,6 +1,6 @@
 <?php
 
-namespace GetCandy\Opayo;
+namespace Lunar\Opayo;
 
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Facades\Http;
