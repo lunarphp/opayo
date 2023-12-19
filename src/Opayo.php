@@ -46,8 +46,6 @@ class Opayo implements OpayoInterface
 
     /**
      * Return the Http client.
-     *
-     * @return void
      */
     public function api()
     {
@@ -58,7 +56,7 @@ class Opayo implements OpayoInterface
      * Return a transaction from the API
      *
      * @param  string  $id
-     * @return void
+     * @return mixed
      */
     public function getTransaction($id, $attempt = 1)
     {
