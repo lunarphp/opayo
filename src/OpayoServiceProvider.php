@@ -30,27 +30,30 @@ class OpayoServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
         Blade::directive('opayoScripts', function ($incVendor = true) {
-            $url = 'https://pi-test.sagepay.com/api/v1/js/sagepay.js';
+            $url = 'https://sandbox.opayo.eu.elavon.com/api/v1/js/sagepay.js';
 
             $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
 
             $jsUrl = asset('/vendor/opayo'.$manifest['/opayo.js']);
 
             if (strtolower(config('services.opayo.env', 'test')) == 'live') {
-                $url = 'https://pi-live.sagepay.com/api/v1/js/sagepay.js';
+                $url = 'https://live.opayo.eu.elavon.com/api/v1/js/sagepay.js';
             }
 
             $manifest = json_decode(file_get_contents(__DIR__.'/../dist/mix-manifest.json'), true);
 
             $jsUrl = asset('/vendor/lunar'.$manifest['/opayo.js']);
 
-            if (!$incVendor) {
-                return  <<<EOT
+            if (! $incVendor) {
+                return <<<EOT
                 <script src="{$url}"></script>
             EOT;
             }
-            return  <<<EOT
+
+            return <<<EOT
                 <script src="{$jsUrl}" async></script>
                 <script src="{$url}" async></script>
             EOT;
