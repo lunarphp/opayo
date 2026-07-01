@@ -6,21 +6,19 @@ use Carbon\Carbon;
 use Illuminate\Config\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Str;
-use Lunar\Base\DataTransferObjects\PaymentCapture;
-use Lunar\Base\DataTransferObjects\PaymentCheck;
-use Lunar\Base\DataTransferObjects\PaymentChecks;
-use Lunar\Base\DataTransferObjects\PaymentRefund;
-use Lunar\Events\PaymentAttemptEvent;
-use Lunar\Models\Contracts\Order as OrderContract;
-use Lunar\Models\Contracts\Transaction as TransactionContract;
-use Lunar\Models\Order;
-use Lunar\Models\Transaction;
+use Lunar\Core\DataObjects\PaymentCapture;
+use Lunar\Core\DataObjects\PaymentCheck;
+use Lunar\Core\DataObjects\PaymentChecks;
+use Lunar\Core\DataObjects\PaymentRefund;
+use Lunar\Core\Events\PaymentAttemptEvent;
+use Lunar\Core\Models\Order;
+use Lunar\Core\Models\Transaction;
+use Lunar\Core\PaymentTypes\AbstractPayment;
 use Lunar\Opayo\DataTransferObjects\AuthPayloadParameters;
 use Lunar\Opayo\Facades\Opayo;
 use Lunar\Opayo\Models\OpayoToken;
 use Lunar\Opayo\Responses\PaymentAuthorize;
 use Lunar\Opayo\Responses\ThreeDSecureResponse;
-use Lunar\PaymentTypes\AbstractPayment;
 
 class OpayoPaymentType extends AbstractPayment
 {
@@ -42,7 +40,7 @@ class OpayoPaymentType extends AbstractPayment
     /**
      * Authorize the payment for processing.
      *
-     * @return \Lunar\Base\DataTransferObjects\PaymentAuthorize
+     * @return \Lunar\Core\DataObjects\PaymentAuthorize
      */
     public function authorize(): PaymentAuthorize|ThreeDSecureResponse
     {
@@ -125,11 +123,8 @@ class OpayoPaymentType extends AbstractPayment
             );
         }
 
-        $status = $this->data['status'] ?? null;
-
         if ($successful) {
             $this->order->update([
-                'status' => $status ?? ($this->config['authorized'] ?? null),
                 'placed_at' => now(),
             ]);
         }
@@ -151,7 +146,7 @@ class OpayoPaymentType extends AbstractPayment
      *
      * @param  int  $amount
      */
-    public function capture(TransactionContract $transaction, $amount = 0): PaymentCapture
+    public function capture(Transaction $transaction, $amount = 0): PaymentCapture
     {
         /** @var Transaction $transaction */
         $response = Opayo::api()->post("transactions/{$transaction->reference}/instructions", [
@@ -190,7 +185,7 @@ class OpayoPaymentType extends AbstractPayment
      *
      * @param  string|null  $notes
      */
-    public function refund(TransactionContract $transaction, int $amount = 0, $notes = null): PaymentRefund
+    public function refund(Transaction $transaction, int $amount = 0, $notes = null): PaymentRefund
     {
         /** @var Transaction $transaction */
         $response = Opayo::api()->post('transactions', [
@@ -322,11 +317,8 @@ class OpayoPaymentType extends AbstractPayment
             success: $successful
         );
 
-        $status = $this->data['status'] ?? null;
-
         if ($successful) {
             $this->order->update([
-                'status' => $status ?? ($this->config['authorized'] ?? null),
                 'placed_at' => now(),
             ]);
         }
@@ -389,7 +381,7 @@ class OpayoPaymentType extends AbstractPayment
             merchantSessionKey: $this->data['merchant_key'],
             cardIdentifier: $this->data['card_identifier'],
             vendorTxCode: Str::random(40),
-            amount: $this->order->total->value,
+            amount: $this->order->total,
             currency: $this->order->currency_code,
             customerFirstName: $billingAddress->first_name,
             customerLastName: $billingAddress->last_name,
@@ -441,7 +433,7 @@ class OpayoPaymentType extends AbstractPayment
         $this->policy = $policy;
     }
 
-    public function getPaymentChecks(TransactionContract $transaction): PaymentChecks
+    public function getPaymentChecks(Transaction $transaction): PaymentChecks
     {
         /** @var Transaction $transaction */
         $meta = $transaction->meta['threedSecure'] ?? null;
@@ -518,7 +510,7 @@ class OpayoPaymentType extends AbstractPayment
         return $checks;
     }
 
-    private function saveCard(OrderContract $order, object $details, ?string $authCode = null)
+    private function saveCard(Order $order, object $details, ?string $authCode = null)
     {
         /** @var Order $order */
         if (! $order->user_id) {

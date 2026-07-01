@@ -3,9 +3,9 @@
 namespace Lunar\Opayo\Components;
 
 use Livewire\Component;
-use Lunar\Facades\CartSession;
-use Lunar\Facades\Payments;
-use Lunar\Models\Contracts\Cart as CartContract;
+use Lunar\Core\Facades\CartSession;
+use Lunar\Core\Facades\Payments;
+use Lunar\Core\Models\Cart;
 use Lunar\Opayo\Facades\Opayo;
 
 class PaymentForm extends Component
@@ -13,7 +13,7 @@ class PaymentForm extends Component
     /**
      * The instance of the order.
      */
-    public CartContract $cart;
+    public Cart $cart;
 
     /**
      * The return URL on a successful transaction
