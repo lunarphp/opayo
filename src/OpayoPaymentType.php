@@ -2,9 +2,6 @@
 
 namespace Lunar\Opayo;
 
-use Carbon\Carbon;
-use Illuminate\Config\Repository;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Str;
 use Lunar\Base\DataTransferObjects\PaymentCapture;
 use Lunar\Base\DataTransferObjects\PaymentCheck;
@@ -434,7 +431,7 @@ class OpayoPaymentType extends AbstractPayment
     }
 
     /**
-     * @param  Repository|\Illuminate\Contracts\Foundation\Application|Application|mixed|string  $policy
+     * @param  \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|\Illuminate\Foundation\Application|mixed|string  $policy
      */
     public function setPolicy(mixed $policy): void
     {
@@ -531,7 +528,7 @@ class OpayoPaymentType extends AbstractPayment
         $payment->user_id = $this->order->user_id;
         $payment->card_type = strtolower($details->cardType);
         $payment->last_four = $details->lastFourDigits;
-        $payment->expires_at = Carbon::createFromFormat('my', $details->expiryDate)->endOfMonth();
+        $payment->expires_at = \Carbon\Carbon::createFromFormat('my', $details->expiryDate)->endOfMonth();
         $payment->token = $details->cardIdentifier;
         $payment->auth_code = $authCode;
         $payment->save();
